@@ -6,9 +6,11 @@ import java.util.List;
 import com.example.backenddemo.dto.StudentDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
-public class    GreetingController {
+public class GreetingController {
     @GetMapping("/greet")
     public String greet(@RequestParam String name){
         return "Hello " + name;
@@ -29,20 +31,31 @@ public class    GreetingController {
 
     }
     @GetMapping("/students")
-    public List<StudentDTO> getStudents(){
-        return studentService.getAllStudents();
+    public ResponseEntity<Page<StudentDTO>> getStudents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy
+    ){
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(sortBy));
+        return ResponseEntity.ok(studentService.getAllStudents(pageable));
     }
     @GetMapping("/students/{id}")
-    public StudentDTO getStudentById(@PathVariable Long id){
-        return studentService.getStudentById(id);
+    public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id){
+        StudentDTO student = studentService.getStudentById(id);
+        return ResponseEntity.ok(student);
     }
     @PutMapping("/students/{id}")
-    public StudentDTO updateStudent(@PathVariable Long id,@Valid @RequestBody StudentDTO studentDTO){
-        return studentService.updateStudent(id,studentDTO);
+    public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id,@Valid @RequestBody StudentDTO studentDTO){
+        StudentDTO updated = studentService.updateStudent(id,studentDTO);
+        return ResponseEntity.ok(updated);
     }
     @DeleteMapping("/students/{id}")
-    public String deleteStudent(@PathVariable Long id){
+    public ResponseEntity<String> deleteStudent(@PathVariable Long id){
         studentService.deleteStudent(id);
-        return "student deleted successfully";
+        return ResponseEntity.ok("student deleted successfully");
+    }
+    @GetMapping("/students/search")
+    public ResponseEntity<List<StudentDTO>> searchStudents(@RequestParam String name){
+        return ResponseEntity.ok(studentService.searchStudentsByName(name));
     }
 }
